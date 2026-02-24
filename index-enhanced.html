@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="de" id="htmlRoot">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="title">Hello World Projekt</title>
+    
+    <!-- Google Translate API -->
+    <script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+    
+    <!-- jsPDF für PDF Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <!-- CryptoJS für Hash-Genereation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.0/crypto-js.min.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: linear-gradient(135deg, #1e1e2e 0%, #2d2d44 100%);
+            color: #e0e0e0;
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(45, 45, 68, 0.8);
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        header {
+            border-bottom: 2px solid #4a9eff;
+            padding-bottom: 30px;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #4a9eff;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            color: #b0b0c0;
+            font-size: 1.1em;
+        }
+
+        /* Language Selector */
+        .language-selector {
+            background: rgba(74, 158, 255, 0.1);
+            border: 1px solid #4a9eff;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .language-selector h2 {
+            color: #4a9eff;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .language-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+            gap: 10px;
+        }
+
+        .lang-btn {
+            padding: 10px 12px;
+            border: 2px solid #4a9eff;
+            background: rgba(74, 158, 255, 0.15);
+            color: #4a9eff;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85em;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+        }
+
+        .lang-btn:hover {
+            background: #4a9eff;
+            color: #1e1e2e;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(74, 158, 255, 0.3);
+        }
+
+        .lang-btn.active {
+            background: #4a9eff;
+            color: #1e1e2e;
+            box-shadow: 0 0 20px rgba(74, 158, 255, 0.5);
+        }
+
+        /* Download Dossier Section */
+        .dossier-section {
+            background: rgba(74, 158, 255, 0.1);
+            border: 1px solid #4a9eff;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .dossier-section h2 {
+            color: #4a9eff;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .dossier-buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .download-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .download-btn.html {
+            background: #4a9eff;
+            color: #1e1e2e;
+        }
+
+        .download-btn.html:hover {
+            background: #2a7fcc;
+            box-shadow: 0 5px 15px rgba(74, 158, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .download-btn.pdf {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .download-btn.pdf:hover {
+            background: #ff5252;
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .certification-info {
+            background: rgba(100, 150, 200, 0.2);
+            border-left: 4px solid #4a9eff;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 15px;
+        }
+
+        .certification-info h3 {
+            color: #4a9eff;
+            margin-bottom: 10px;
+        }
+
+        .cert-item {
+            display: grid;
+            grid-template-columns: 140px 1fr;
+            gap: 10px;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+
+        .cert-label {
+            font-weight: 600;
+            color: #4a9eff;
+        }
+
+        .cert-value {
+            color: #c0c0d0;
+            word-break: break-all;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            color: #4a9eff;
+            padding: 20px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        /* Content Area */
+        .content {
+            background: rgba(30, 30, 46, 0.8);
+            padding: 30px;
+            border-radius: 8px;
+            border: 1px solid rgba(74, 158, 255, 0.2);
+            line-height: 1.8;
+        }
+
+        .content h2 {
+            color: #4a9eff;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        .content p {
+            margin-bottom: 15px;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(74, 158, 255, 0.2);
+            color: #8080a0;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .language-buttons {
+                grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+            }
+
+            .cert-item {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1 data-i18n="welcome">Willkommen zum Hello World Projekt</h1>
+            <p class="subtitle" data-i18n="subtitle">EU Patent & Certification System</p>
+        </header>
+
+        <!-- Language Selector -->
+        <div class="language-selector">
+            <h2 data-i18n="select_language">Sprache wählen / Select Language</h2>
+            <div class="language-buttons">
+                <button class="lang-btn active" onclick="switchLanguage('de')" data-lang="de">DE</button>
+                <button class="lang-btn" onclick="switchLanguage('en')" data-lang="en">EN</button>
+                <button class="lang-btn" onclick="switchLanguage('it')" data-lang="it">IT</button>
+                <button class="lang-btn" onclick="switchLanguage('es')" data-lang="es">ES</button>
+                <button class="lang-btn" onclick="switchLanguage('fr')" data-lang="fr">FR</button>
+                <button class="lang-btn" onclick="switchLanguage('ja')" data-lang="ja">JP</button>
+                <button class="lang-btn" onclick="switchLanguage('ar')" data-lang="ar">AR</button>
+                <button class="lang-btn" onclick="switchLanguage('hi')" data-lang="hi">HI</button>
+                <button class="lang-btn" onclick="switchLanguage('ur')" data-lang="ur">UR</button>
+                <button class="lang-btn" onclick="switchLanguage('fi')" data-lang="fi">FI</button>
+                <button class="lang-btn" onclick="switchLanguage('nl')" data-lang="nl">NL</button>
+                <button class="lang-btn" onclick="switchLanguage('pt')" data-lang="pt">PT</button>
+                <button class="lang-btn" onclick="switchLanguage('ca')" data-lang="ca">CA</button>
+                <button class="lang-btn" onclick="switchLanguage('eu')" data-lang="eu">AU</button>
+                <button class="lang-btn" onclick="switchLanguage('be')" data-lang="be">BE</button>
+                <button class="lang-btn" onclick="switchLanguage('de-CH')" data-lang="de-CH">CH</button>
+            </div>
+        </div>
+
+        <!-- Download Dossier Section -->
+        <div class="dossier-section">
+            <h2 data-i18n="download_dossier">Download Dossier</h2>
+            <div class="dossier-buttons">
+                <button class="download-btn html" onclick="downloadHTML()">
+                    <span>📄</span>
+                    <span data-i18n="download_html">Als HTML herunterladen</span>
+                </button>
+                <button class="download-btn pdf" onclick="downloadPDF()">
+                    <span>📕</span>
+                    <span data-i18n="download_pdf">Als PDF herunterladen</span>
+                </button>
+            </div>
+
+            <div id="loadingIndicator" class="loading">
+                <div class="spinner"></div>
+                <p data-i18n="generating">Wird generiert...</p>
+            </div>
+
+            <div class="certification-info">
+                <h3 data-i18n="certification">🏛️ EU Patent Zertifizierung</h3>
+                <div class="cert-item">
+                    <span class="cert-label" data-i18n="cert_id">Zertifikat ID:</span>
+                    <span class="cert-value" id="certId">-</span>
+                </div>
+                <div class="cert-item">
+                    <span class="cert-label" data-i18n="hash_code">Hash-Code:</span>
+                    <span class="cert-value" id="hashCode">-</span>
+                </div>
+                <div class="cert-item">
+                    <span class="cert-label" data-i18n="patent_status">Patent Status:</span>
+                    <span class="cert-value" id="patentStatus">EU-UNION Patent Protected</span>
+                </div>
+                <div class="cert-item">
+                    <span class="cert-label" data-i18n="created_date">Erstellt:</span>
+                    <span class="cert-value" id="createdDate">-</span>
+                </div>
+                <div class="cert-item">
+                    <span class="cert-label" data-i18n="state_flow">StateFlowWishes:</span>
+                    <span class="cert-value" id="stateFlow">EU-UNION Protected State</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="content">
+            <h2 data-i18n="about_title">Über dieses Projekt</h2>
+            <p data-i18n="about_text1">
+                Dieses ist ein innovatives Projekt, das unter dem Schutz der EU-Patentregeln entwickelt wurde. 
+                Es kombiniert modernste Technologie mit robusten Sicherheitsfeatures.
+            </p>
+            <p data-i18n="about_text2">
+                Das Projekt verfügt über ein automatisches Übersetzungssystem, das es Inhalten ermöglicht, 
+                in 15+ verschiedenen Sprachen zugänglich zu sein.
+            </p>
+
+            <h2 data-i18n="features_title">Merkmale</h2>
+            <ul style="margin-left: 20px; color: #c0c0d0;">
+                <li data-i18n="feature1">🌍 Multi-Language Support (15+ Sprachen)</li>
+                <li data-i18n="feature2">🔒 EU Patent Protection</li>
+                <li data-i18n="feature3">📥 HTML & PDF Download Funktionalität</li>
+                <li data-i18n="feature4">✅ Automatische Hash-Code Generierung</li>
+                <li data-i18n="feature5">📜 EU-UNION StateFlowWishes Zertifizierung</li>
+            </ul>
+
+            <h2 data-i18n="usage_title">Verwendung</h2>
+            <p data-i18n="usage_text">
+                Verwenden Sie die Sprachschaltflächen oben, um die Website in verschiedene Sprachen zu übersetzen. 
+                Klicken Sie auf die Download-Buttons, um eine Kopie des Dossiers im HTML- oder PDF-Format herunterzuladen.
+            </p>
+        </div>
+
+        <footer data-i18n="footer">
+            © 2026 EU-UNION Patent Protected. All rights reserved. | Powered by Builder.io Fusion
+        </footer>
+    </div>
+
+    <script>
+        // Translations
+        const translations = {
+            de: {
+                title: "Hello World Projekt",
+                welcome: "Willkommen zum Hello World Projekt",
+                subtitle: "EU Patent & Certification System",
+                select_language: "Sprache wählen / Select Language",
+                download_dossier: "Download Dossier",
+                download_html: "Als HTML herunterladen",
+                download_pdf: "Als PDF herunterladen",
+                generating: "Wird generiert...",
+                certification: "🏛️ EU Patent Zertifizierung",
+                cert_id: "Zertifikat ID:",
+                hash_code: "Hash-Code:",
+                patent_status: "Patent Status:",
+                created_date: "Erstellt:",
+                state_flow: "StateFlowWishes:",
+                about_title: "Über dieses Projekt",
+                about_text1: "Dieses ist ein innovatives Projekt, das unter dem Schutz der EU-Patentregeln entwickelt wurde. Es kombiniert modernste Technologie mit robusten Sicherheitsfeatures.",
+                about_text2: "Das Projekt verfügt über ein automatisches Übersetzungssystem, das es Inhalten ermöglicht, in 15+ verschiedenen Sprachen zugänglich zu sein.",
+                features_title: "Merkmale",
+                feature1: "🌍 Multi-Language Support (15+ Sprachen)",
+                feature2: "🔒 EU Patent Protection",
+                feature3: "📥 HTML & PDF Download Funktionalität",
+                feature4: "✅ Automatische Hash-Code Generierung",
+                feature5: "📜 EU-UNION StateFlowWishes Zertifizierung",
+                usage_title: "Verwendung",
+                usage_text: "Verwenden Sie die Sprachschaltflächen oben, um die Website in verschiedene Sprachen zu übersetzen. Klicken Sie auf die Download-Buttons, um eine Kopie des Dossiers im HTML- oder PDF-Format herunterzuladen.",
+                footer: "© 2026 EU-UNION Patent Protected. All rights reserved. | Powered by Builder.io Fusion"
+            },
+            en: {
+                title: "Hello World Project",
+                welcome: "Welcome to Hello World Project",
+                subtitle: "EU Patent & Certification System",
+                select_language: "Select Language",
+                download_dossier: "Download Dossier",
+                download_html: "Download as HTML",
+                download_pdf: "Download as PDF",
+                generating: "Generating...",
+                certification: "🏛️ EU Patent Certification",
+                cert_id: "Certificate ID:",
+                hash_code: "Hash Code:",
+                patent_status: "Patent Status:",
+                created_date: "Created:",
+                state_flow: "StateFlowWishes:",
+                about_title: "About This Project",
+                about_text1: "This is an innovative project developed under the protection of EU patent rules. It combines cutting-edge technology with robust security features.",
+                about_text2: "The project features an automatic translation system that allows content to be accessible in 15+ different languages.",
+                features_title: "Features",
+                feature1: "🌍 Multi-Language Support (15+ Languages)",
+                feature2: "🔒 EU Patent Protection",
+                feature3: "📥 HTML & PDF Download Functionality",
+                feature4: "✅ Automatic Hash Code Generation",
+                feature5: "📜 EU-UNION StateFlowWishes Certification",
+                usage_title: "Usage",
+                usage_text: "Use the language buttons above to translate the website into different languages. Click the download buttons to get a copy of the dossier in HTML or PDF format.",
+                footer: "© 2026 EU-UNION Patent Protected. All rights reserved. | Powered by Builder.io Fusion"
+            },
+            it: {
+                welcome: "Benvenuto al Progetto Hello World",
+                subtitle: "Sistema di Brevetto e Certificazione UE",
+                select_language: "Seleziona Lingua",
+                download_dossier: "Scarica Dossier",
+                download_html: "Scarica come HTML",
+                download_pdf: "Scarica come PDF",
+                generating: "Generazione in corso...",
+                certification: "🏛️ Certificazione Brevetto UE"
+            },
+            es: {
+                welcome: "Bienvenido al Proyecto Hello World",
+                subtitle: "Sistema de Patente y Certificación de la UE",
+                select_language: "Seleccionar Idioma",
+                download_dossier: "Descargar Expediente",
+                download_html: "Descargar como HTML",
+                download_pdf: "Descargar como PDF"
+            },
+            fr: {
+                welcome: "Bienvenue au Projet Hello World",
+                subtitle: "Système de Brevet et Certification UE",
+                select_language: "Sélectionner la Langue",
+                download_dossier: "Télécharger le Dossier",
+                download_html: "Télécharger en HTML",
+                download_pdf: "Télécharger en PDF"
+            }
+        };
+
+        let currentLanguage = 'de';
+        let certId = '';
+        let hashValue = '';
+
+        // Generate certification data on page load
+        function initializeCertification() {
+            certId = 'EU-' + Date.now() + '-' + Math.random().toString(36).substring(2, 9).toUpperCase();
+            const contentHash = CryptoJS.SHA256(document.documentElement.innerHTML);
+            hashValue = contentHash.toString();
+            
+            document.getElementById('certId').textContent = certId;
+            document.getElementById('hashCode').textContent = hashValue.substring(0, 64) + '...';
+            document.getElementById('createdDate').textContent = new Date().toLocaleString('de-DE');
+        }
+
+        // Switch language (client-side translation + Google Translate fallback)
+        function switchLanguage(lang) {
+            currentLanguage = lang;
+            
+            // Update active button
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-lang="${lang}"]`).classList.add('active');
+            
+            // Update document language
+            document.documentElement.lang = lang;
+            
+            // Apply local translations
+            applyTranslations(lang);
+            
+            // Use Google Translate for remaining content
+            if (window.google && window.google.translate && window.google.translate.TranslateElement) {
+                document.getElementById('google_translate_element').innerHTML = '';
+                new window.google.translate.TranslateElement(
+                    {pageLanguage: 'de', includedLanguages: lang},
+                    'google_translate_element'
+                );
+            }
+        }
+
+        // Apply local translations
+        function applyTranslations(lang) {
+            const langData = translations[lang] || translations['en'];
+            
+            document.querySelectorAll('[data-i18n]').forEach(element => {
+                const key = element.getAttribute('data-i18n');
+                if (langData[key]) {
+                    if (element.tagName === 'INPUT' || element.tagName === 'BUTTON') {
+                        element.value = langData[key];
+                    } else {
+                        element.textContent = langData[key];
+                    }
+                }
+            });
+        }
+
+        // Download as HTML
+        function downloadHTML() {
+            const element = document.documentElement.cloneNode(true);
+            const htmlContent = '<!DOCTYPE html>\n' + element.outerHTML;
+            
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `Dossier-${certId}-${currentLanguage}.html`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        // Download as PDF
+        function downloadPDF() {
+            const loadingDiv = document.getElementById('loadingIndicator');
+            loadingDiv.classList.add('active');
+            
+            const element = document.querySelector('.container');
+            const opt = {
+                margin: 10,
+                filename: `Dossier-${certId}-${currentLanguage}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' },
+                pagebreak: { mode: ['css', 'legacy'] }
+            };
+            
+            html2pdf().set(opt).from(element).save().then(() => {
+                loadingDiv.classList.remove('active');
+            });
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeCertification();
+            applyTranslations('de');
+        });
+
+        // Google Translate callback
+        function googleTranslateElementInit() {
+            new window.google.translate.TranslateElement(
+                {pageLanguage: 'de', includedLanguages: 'de,en,it,es,fr,ja,ar,hi,ur,fi,nl,pt,ca,eu'},
+                'google_translate_element'
+            );
+        }
+    </script>
+
+    <!-- Hidden div for Google Translate -->
+    <div id="google_translate_element" style="display:none;"></div>
+</body>
+</html>
